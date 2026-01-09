@@ -7,7 +7,8 @@
 % Prerequisites:
 %   - MATLAB R2023b or later
 %   - Text Analytics Toolbox
-%   - MATLAB Support for MCP
+%   - MATLAB MCP HTTP Client (from File Exchange)
+%   - Large Language Models (LLMs) with MATLAB add-on
 %   - OpenAI API key set in environment variable OPENAI_API_KEY
 %   - MCP Server running on http://localhost:5000
 %
@@ -61,43 +62,49 @@ systemPrompt = fileread(templatePath);
 fprintf('  ✓ Loaded system prompt (%d characters)\n', length(systemPrompt));
 fprintf('\n');
 
-%% Step 3: Fetch available tools from MCP server
-fprintf('Step 3: Fetching available tools from MCP server...\n');
+%% Step 3: Initialize MCP Client
+fprintf('Step 3: Initializing MCP HTTP Client...\n');
 
 try
-    toolsResponse = webread([MCP_SERVER_URL, '/tools']);
-    availableTools = toolsResponse.tools;
-    fprintf('  ✓ Found %d available tools:\n', length(availableTools));
-    for i = 1:length(availableTools)
-        fprintf('    - %s\n', availableTools(i).name);
+    % Create MCP client using mcpHTTPClient function
+    % This connects to the MCP server and fetches available tools
+    client = mcpHTTPClient(MCP_SERVER_URL);
+    
+    % Get available tools from server
+    serverTools = client.ServerTools;
+    
+    fprintf('  ✓ Connected to MCP server\n');
+    fprintf('  ✓ Found %d available tools:\n', length(serverTools));
+    for i = 1:length(serverTools)
+        fprintf('    - %s: %s\n', serverTools{i}.name, ...
+                truncateString(serverTools{i}.description, 60));
     end
 catch ME
-    error('Failed to fetch tools: %s', ME.message);
+    error('Failed to initialize MCP client: %s', ME.message);
 end
 
 fprintf('\n');
 
 %% Step 4: Initialize OpenAI Chat with tools
-fprintf('Step 4: Initializing LLM agent...\n');
+fprintf('Step 4: Initializing LLM agent with MCP tools...\n');
 
-% Convert MATLAB struct array to cell array of structs for OpenAI
-toolDefinitions = cell(1, length(availableTools));
-for i = 1:length(availableTools)
-    tool = availableTools(i);
-    toolDefinitions{i} = struct(...
-        'type', 'function', ...
-        'function', struct(...
-            'name', tool.name, ...
-            'description', tool.description, ...
-            'parameters', tool.inputSchema ...
-        ) ...
-    );
+try
+    % Convert MCP server tools to openAIFunction objects
+    % This makes the tools available to the LLM for function calling
+    mcpFunctions = openAIFunction(serverTools);
+    
+    % Create OpenAI Chat object with function calling enabled
+    chat = openAIChat(LLM_MODEL, ...
+        'SystemPrompt', systemPrompt, ...
+        'Tools', mcpFunctions, ...
+        'Temperature', 0.7);
+    
+    fprintf('  ✓ LLM agent initialized (%s)\n', LLM_MODEL);
+    fprintf('  ✓ Registered %d tools with LLM\n', length(serverTools));
+catch ME
+    error('Failed to initialize LLM: %s', ME.message);
 end
 
-% Create OpenAI Chat object
-% Note: This requires the OpenAI API credentials to be configured
-% You may need to use openAIChat differently based on your MATLAB version
-fprintf('  ✓ LLM agent initialized with %d tools\n', length(toolDefinitions));
 fprintf('\n');
 
 %% Step 5: Interactive demo - Example queries
@@ -117,46 +124,60 @@ for queryIdx = 1:length(exampleQueries)
     userQuery = exampleQueries{queryIdx};
     
     fprintf('Query %d:\n"%s"\n\n', queryIdx, userQuery);
-    fprintf('Processing...\n');
+    fprintf('Processing with LLM agent...\n');
     
-    % Call the LLM with function calling
-    % Note: Actual implementation depends on your MATLAB OpenAI integration
-    % This is a simplified demonstration
-    
-    % Parse the query and determine which tool to call
-    % In a full implementation, the LLM would do this automatically
-    toolCall = parseQueryForToolCall(userQuery, availableTools);
-    
-    if ~isempty(toolCall)
-        fprintf('  → Calling tool: %s\n', toolCall.name);
-        fprintf('  → Parameters:\n');
-        disp(toolCall.parameters);
+    try
+        % Generate response from LLM
+        % The LLM will decide which tools to call based on the query
+        messages = {struct('role', 'user', 'content', userQuery)};
+        [response, streamedText] = generate(chat, messages);
         
-        % Execute the tool call via MCP server
-        result = executeMCPTool(MCP_SERVER_URL, toolCall.name, toolCall.parameters);
-        
-        if result.success
-            fprintf('  ✓ Configuration generated successfully\n');
-            fprintf('  → Module: %s\n', result.module);
-            fprintf('  → ARXML length: %d characters\n', length(result.arxml));
+        % Check if LLM wants to call tools
+        if isfield(response, 'tool_calls') && ~isempty(response.tool_calls)
+            fprintf('  → LLM requested tool calls\n');
             
-            % Save output to file
-            outputFilename = sprintf('output_query_%d_%s.arxml', queryIdx, result.module);
-            outputPath = fullfile(fileparts(fileparts(mfilename('fullpath'))), ...
-                                'examples', outputFilename);
-            
-            % Write ARXML to file
-            fid = fopen(outputPath, 'w', 'n', 'UTF-8');
-            fprintf(fid, '%s', result.arxml);
-            fclose(fid);
-            
-            fprintf('  → Saved to: %s\n', outputPath);
+            % Execute each tool call
+            for toolIdx = 1:length(response.tool_calls)
+                toolCall = response.tool_calls(toolIdx);
+                toolName = toolCall.function.name;
+                
+                fprintf('  → Calling tool: %s\n', toolName);
+                
+                % Execute the tool via MCP client
+                % The callTool function handles the HTTP request to the server
+                toolResult = callTool(client, toolCall.function);
+                
+                fprintf('  ✓ Tool execution completed\n');
+                
+                % Parse the result
+                if isfield(toolResult, 'success') && toolResult.success
+                    fprintf('  → Module: %s\n', toolResult.module);
+                    fprintf('  → ARXML length: %d characters\n', length(toolResult.arxml));
+                    
+                    % Save output to file
+                    outputFilename = sprintf('output_query_%d_%s.arxml', ...
+                                           queryIdx, toolResult.module);
+                    outputPath = fullfile(fileparts(fileparts(mfilename('fullpath'))), ...
+                                        'examples', outputFilename);
+                    
+                    % Write ARXML to file
+                    fid = fopen(outputPath, 'w', 'n', 'UTF-8');
+                    fprintf(fid, '%s', toolResult.arxml);
+                    fclose(fid);
+                    
+                    fprintf('  → Saved to: %s\n', outputPath);
+                else
+                    fprintf('  ✗ Tool execution failed\n');
+                end
+            end
         else
-            fprintf('  ✗ Configuration generation failed\n');
-            fprintf('  → Error: %s\n', result.error);
+            % LLM responded without tool calls
+            fprintf('  → LLM response (no tool calls):\n');
+            fprintf('  %s\n', streamedText);
         end
-    else
-        fprintf('  ✗ Could not determine appropriate tool for query\n');
+        
+    catch ME
+        fprintf('  ✗ Error processing query: %s\n', ME.message);
     end
     
     fprintf('\n');
@@ -169,6 +190,9 @@ fprintf('Interactive Mode\n');
 fprintf('=======================================================\n\n');
 fprintf('You can now enter your own queries.\n');
 fprintf('Type ''exit'' to quit.\n\n');
+
+% Initialize conversation history
+conversationHistory = {};
 
 while true
     userInput = input('Enter your AUTOSAR configuration request: ', 's');
@@ -184,27 +208,45 @@ while true
     
     fprintf('\nProcessing your request...\n');
     
-    % Parse and execute
-    toolCall = parseQueryForToolCall(userInput, availableTools);
-    
-    if ~isempty(toolCall)
-        result = executeMCPTool(MCP_SERVER_URL, toolCall.name, toolCall.parameters);
+    try
+        % Add user message to conversation
+        conversationHistory{end+1} = struct('role', 'user', 'content', userInput);
         
-        if result.success
-            fprintf('✓ Configuration generated successfully!\n');
-            fprintf('Module: %s\n', result.module);
+        % Generate response
+        [response, streamedText] = generate(chat, conversationHistory);
+        
+        % Handle tool calls
+        if isfield(response, 'tool_calls') && ~isempty(response.tool_calls)
+            fprintf('Executing tool calls...\n');
             
-            % Display first 500 characters of ARXML
-            arxmlPreview = result.arxml;
-            if length(arxmlPreview) > 500
-                arxmlPreview = [arxmlPreview(1:500), '...'];
+            for toolIdx = 1:length(response.tool_calls)
+                toolCall = response.tool_calls(toolIdx);
+                fprintf('  → %s\n', toolCall.function.name);
+                
+                toolResult = callTool(client, toolCall.function);
+                
+                if isfield(toolResult, 'success') && toolResult.success
+                    fprintf('  ✓ Success: %s configuration generated\n', toolResult.module);
+                    
+                    % Display preview
+                    arxmlPreview = toolResult.arxml;
+                    if length(arxmlPreview) > 500
+                        arxmlPreview = [arxmlPreview(1:500), '...'];
+                    end
+                    fprintf('\nARXML Preview:\n%s\n\n', arxmlPreview);
+                else
+                    fprintf('  ✗ Error in tool execution\n\n');
+                end
             end
-            fprintf('\nARXML Preview:\n%s\n\n', arxmlPreview);
         else
-            fprintf('✗ Error: %s\n\n', result.error);
+            fprintf('LLM Response:\n%s\n\n', streamedText);
         end
-    else
-        fprintf('✗ Could not determine appropriate tool for your request.\n\n');
+        
+        % Add assistant response to history
+        conversationHistory{end+1} = struct('role', 'assistant', 'content', streamedText);
+        
+    catch ME
+        fprintf('✗ Error: %s\n\n', ME.message);
     end
 end
 
@@ -215,127 +257,11 @@ fprintf('=======================================================\n');
 
 %% Helper Functions
 
-function toolCall = parseQueryForToolCall(query, availableTools)
-    % Simple rule-based parsing (in production, LLM would handle this)
-    % This function demonstrates the concept; actual implementation would
-    % use LLM for intelligent parsing
-    
-    toolCall = struct();
-    queryLower = lower(query);
-    
-    % Check for CAN-related query
-    if contains(queryLower, 'can') && contains(queryLower, 'configure')
-        toolCall.name = 'generateCanConfig';
-        
-        % Extract parameters
-        params = struct();
-        
-        % ECU type
-        if contains(queryLower, 'powertrain')
-            params.ecuType = 'powertrain';
-        elseif contains(queryLower, 'body')
-            params.ecuType = 'body';
-        elseif contains(queryLower, 'chassis')
-            params.ecuType = 'chassis';
-        else
-            params.ecuType = 'powertrain';  % Default
-        end
-        
-        % Baudrate
-        baudrates = [125, 250, 500, 1000];
-        for br = baudrates
-            if contains(queryLower, sprintf('%d', br))
-                params.baudrate = br;
-                break;
-            end
-        end
-        if ~isfield(params, 'baudrate')
-            params.baudrate = 500;  % Default
-        end
-        
-        % Message objects
-        msgObjMatch = regexp(queryLower, '(\d+)\s+message', 'tokens');
-        if ~isempty(msgObjMatch)
-            params.messageObjects = str2double(msgObjMatch{1}{1});
-        else
-            params.messageObjects = 8;  % Default
-        end
-        
-        % Error handling
-        params.errorHandling = contains(queryLower, 'error');
-        
-        % Wakeup support
-        params.wakeupSupport = contains(queryLower, 'wakeup');
-        
-        toolCall.parameters = params;
-        
-    % Check for NvM-related query
-    elseif contains(queryLower, 'nvm') || contains(queryLower, 'fault')
-        toolCall.name = 'generateNvmConfig';
-        
-        params = struct();
-        
-        % Block count
-        blockMatch = regexp(queryLower, '(\d+)\s+(?:fault|block)', 'tokens');
-        if ~isempty(blockMatch)
-            params.blockCount = str2double(blockMatch{1}{1});
-        else
-            params.blockCount = 10;  % Default
-        end
-        
-        % Block size (simplified - would be calculated based on requirements)
-        params.blockSize = 256;
-        
-        % Write strategy
-        if contains(queryLower, 'immediate')
-            params.writeStrategy = 'immediate';
-        elseif contains(queryLower, 'deferred')
-            params.writeStrategy = 'deferred';
-        else
-            params.writeStrategy = 'immediate';  % Default for fault logging
-        end
-        
-        % Features
-        params.crcProtection = true;  % Always enabled for fault data
-        params.redundancy = contains(queryLower, 'redundan');
-        params.wearLeveling = contains(queryLower, 'wear');
-        
-        toolCall.parameters = params;
-        
+function truncated = truncateString(str, maxLen)
+    % Truncate string to maximum length with ellipsis
+    if length(str) > maxLen
+        truncated = [str(1:maxLen-3), '...'];
     else
-        % No matching tool found
-        toolCall = [];
-    end
-end
-
-function result = executeMCPTool(serverUrl, toolName, parameters)
-    % Execute a tool call on the MCP server
-    
-    try
-        % Prepare request
-        url = sprintf('%s/%s', serverUrl, toolName);
-        options = weboptions('MediaType', 'application/json', ...
-                            'RequestMethod', 'post', ...
-                            'Timeout', 30);
-        
-        % Make request
-        response = webwrite(url, parameters, options);
-        
-        % Return structured result
-        result = struct();
-        result.success = response.success;
-        if response.success
-            result.module = response.module;
-            result.arxml = response.arxml;
-            result.parameters = response.parameters;
-        else
-            result.error = 'Unknown error';
-        end
-        
-    catch ME
-        % Handle errors
-        result = struct();
-        result.success = false;
-        result.error = ME.message;
+        truncated = str;
     end
 end
