@@ -1,0 +1,99 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<AUTOSAR xmlns="http://autosar.org/schema/r4.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://autosar.org/schema/r4.0 AUTOSAR_4-2-2.xsd">
+  <ADMIN-DATA>
+    <DOC-REVISIONS>
+      <DOC-REVISION>
+        <REVISION-LABEL>1.0.0</REVISION-LABEL>
+        <DATE>2025-01-09T12:30:45</DATE>
+      </DOC-REVISION>
+    </DOC-REVISIONS>
+  </ADMIN-DATA>
+  <AR-PACKAGES>
+    <AR-PACKAGE>
+      <SHORT-NAME>CanConfiguration</SHORT-NAME>
+      <ELEMENTS>
+        <CAN-CONTROLLER>
+          <SHORT-NAME>CanController_powertrain</SHORT-NAME>
+          <CAN-CONTROLLER-BAUDRATE-CONFIG>
+            <BAUDRATE>500000</BAUDRATE>
+            <PROP-SEG>6</PROP-SEG>
+            <PHASE-SEG1>7</PHASE-SEG1>
+            <PHASE-SEG2>2</PHASE-SEG2>
+            <SYNC-JUMP-WIDTH>1</SYNC-JUMP-WIDTH>
+          </CAN-CONTROLLER-BAUDRATE-CONFIG>
+          
+          <!-- Message Object 0: Transmit -->
+          <CAN-HW-OBJECT>
+            <SHORT-NAME>CanHwObject_0</SHORT-NAME>
+            <OBJECT-TYPE>TRANSMIT</OBJECT-TYPE>
+            <ID-TYPE>STANDARD</ID-TYPE>
+            <CAN-OBJECT-ID>256</CAN-OBJECT-ID>
+          </CAN-HW-OBJECT>
+          
+          <!-- Message Object 1: Receive -->
+          <CAN-HW-OBJECT>
+            <SHORT-NAME>CanHwObject_1</SHORT-NAME>
+            <OBJECT-TYPE>RECEIVE</OBJECT-TYPE>
+            <ID-TYPE>STANDARD</ID-TYPE>
+            <CAN-OBJECT-ID>257</CAN-OBJECT-ID>
+          </CAN-HW-OBJECT>
+          
+          <!-- Message Object 2: Transmit -->
+          <CAN-HW-OBJECT>
+            <SHORT-NAME>CanHwObject_2</SHORT-NAME>
+            <OBJECT-TYPE>TRANSMIT</OBJECT-TYPE>
+            <ID-TYPE>STANDARD</ID-TYPE>
+            <CAN-OBJECT-ID>258</CAN-OBJECT-ID>
+          </CAN-HW-OBJECT>
+          
+          <!-- Message Object 3: Receive -->
+          <CAN-HW-OBJECT>
+            <SHORT-NAME>CanHwObject_3</SHORT-NAME>
+            <OBJECT-TYPE>RECEIVE</OBJECT-TYPE>
+            <ID-TYPE>STANDARD</ID-TYPE>
+            <CAN-OBJECT-ID>259</CAN-OBJECT-ID>
+          </CAN-HW-OBJECT>
+          
+          <!-- Message Object 4: Transmit -->
+          <CAN-HW-OBJECT>
+            <SHORT-NAME>CanHwObject_4</SHORT-NAME>
+            <OBJECT-TYPE>TRANSMIT</OBJECT-TYPE>
+            <ID-TYPE>STANDARD</ID-TYPE>
+            <CAN-OBJECT-ID>260</CAN-OBJECT-ID>
+          </CAN-HW-OBJECT>
+          
+          <!-- Message Object 5: Receive -->
+          <CAN-HW-OBJECT>
+            <SHORT-NAME>CanHwObject_5</SHORT-NAME>
+            <OBJECT-TYPE>RECEIVE</OBJECT-TYPE>
+            <ID-TYPE>STANDARD</ID-TYPE>
+            <CAN-OBJECT-ID>261</CAN-OBJECT-ID>
+          </CAN-HW-OBJECT>
+          
+          <!-- Message Object 6: Transmit -->
+          <CAN-HW-OBJECT>
+            <SHORT-NAME>CanHwObject_6</SHORT-NAME>
+            <OBJECT-TYPE>TRANSMIT</OBJECT-TYPE>
+            <ID-TYPE>STANDARD</ID-TYPE>
+            <CAN-OBJECT-ID>262</CAN-OBJECT-ID>
+          </CAN-HW-OBJECT>
+          
+          <!-- Message Object 7: Receive -->
+          <CAN-HW-OBJECT>
+            <SHORT-NAME>CanHwObject_7</SHORT-NAME>
+            <OBJECT-TYPE>RECEIVE</OBJECT-TYPE>
+            <ID-TYPE>STANDARD</ID-TYPE>
+            <CAN-OBJECT-ID>263</CAN-OBJECT-ID>
+          </CAN-HW-OBJECT>
+          
+          <!-- Error Handling Configuration -->
+          <CAN-ERROR-HANDLING>
+            <BUS-OFF-RECOVERY>AUTOMATIC</BUS-OFF-RECOVERY>
+            <ERROR-PASSIVE-MODE>ENABLED</ERROR-PASSIVE-MODE>
+            <ERROR-WARNING-THRESHOLD>96</ERROR-WARNING-THRESHOLD>
+          </CAN-ERROR-HANDLING>
+        </CAN-CONTROLLER>
+      </ELEMENTS>
+    </AR-PACKAGE>
+  </AR-PACKAGES>
+</AUTOSAR>
