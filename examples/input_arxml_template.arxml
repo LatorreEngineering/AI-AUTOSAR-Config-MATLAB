@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AUTOSAR xmlns="http://autosar.org/schema/r4.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://autosar.org/schema/r4.0 AUTOSAR_4-2-2.xsd">
+  <ADMIN-DATA>
+    <DOC-REVISIONS>
+      <DOC-REVISION>
+        <REVISION-LABEL>1.0.0</REVISION-LABEL>
+        <DATE>2025-01-09T00:00:00</DATE>
+        <ISSUED-BY>AI-Assisted AUTOSAR Generator</ISSUED-BY>
+      </DOC-REVISION>
+    </DOC-REVISIONS>
+  </ADMIN-DATA>
+  
+  <AR-PACKAGES>
+    <!-- ECU Configuration Package -->
+    <AR-PACKAGE>
+      <SHORT-NAME>ECU_Template</SHORT-NAME>
+      <ELEMENTS>
+        <ECU-INSTANCE>
+          <SHORT-NAME>TemplateECU</SHORT-NAME>
+          <ECU-DESCRIPTION>
+            <SHORT-LABEL>Template ECU for AUTOSAR Configuration</SHORT-LABEL>
+            <CATEGORY>Template</CATEGORY>
+          </ECU-DESCRIPTION>
+        </ECU-INSTANCE>
+      </ELEMENTS>
+      
+      <!-- Sub-packages for different BSW modules -->
+      <AR-PACKAGES>
+        <!-- CAN Configuration Package (Placeholder) -->
+        <AR-PACKAGE>
+          <SHORT-NAME>CanConfiguration</SHORT-NAME>
+          <DESC>
+            <L-2 L="EN">CAN controller and communication configuration</L-2>
+          </DESC>
+        </AR-PACKAGE>
+        
+        <!-- NvM Configuration Package (Placeholder) -->
+        <AR-PACKAGE>
+          <SHORT-NAME>NvMConfiguration</SHORT-NAME>
+          <DESC>
+            <L-2 L="EN">Non-volatile memory block configuration</L-2>
+          </DESC>
+        </AR-PACKAGE>
+        
+        <!-- OS Configuration Package (Placeholder) -->
+        <AR-PACKAGE>
+          <SHORT-NAME>OsConfiguration</SHORT-NAME>
+          <DESC>
+            <L-2 L="EN">Operating system tasks and resources</L-2>
+          </DESC>
+        </AR-PACKAGE>
+      </AR-PACKAGES>
+    </AR-PACKAGE>
+  </AR-PACKAGES>
+</AUTOSAR>
