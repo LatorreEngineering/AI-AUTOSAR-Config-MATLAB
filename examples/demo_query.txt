@@ -1,0 +1,69 @@
+# Example Natural Language Queries for AI-Assisted AUTOSAR Configuration Generator
+
+## Basic CAN Configurations
+
+1. "Configure a CAN interface for a powertrain ECU operating at 500 kbps with extended error handling and 8 message objects for engine control"
+
+2. "Set up CAN communication for a body control module at 250 kbps with 16 message objects and wakeup support"
+
+3. "Create a CAN configuration for a chassis ECU running at 500 kbps with 12 message objects for ABS and ESC systems"
+
+4. "Configure high-speed CAN at 1000 kbps for a gateway ECU with 32 message objects"
+
+## NvM Configuration Queries
+
+5. "Set up NvM blocks for fault logging with 100 fault codes, immediate write for critical faults, and wear-leveling"
+
+6. "Configure non-volatile memory for 50 calibration parameters with deferred write strategy and CRC protection"
+
+7. "Create NvM configuration for user settings storage with 20 blocks, each 128 bytes, with redundancy"
+
+8. "Set up fault memory with 200 diagnostic trouble codes, immediate write, CRC, and redundancy"
+
+## Multi-Module Configurations
+
+9. "Create a complete BSW stack for a body control module with: CAN at 250 kbps, LIN master at 19.2 kbps, NvM for 50 parameters, and OS with 5ms task cycle"
+
+10. "Configure a powertrain ECU with CAN at 500 kbps for engine data, NvM for 100 fault codes, and error handling enabled"
+
+11. "Set up a telematics ECU with CAN at 500 kbps for vehicle data and NvM for 30 configuration parameters"
+
+## Advanced Queries
+
+12. "Configure CAN for ADAS system with 500 kbps, 24 message objects, extended error detection, and wakeup capability"
+
+13. "Set up NvM for end-of-line programming data with 10 blocks of 512 bytes each, triggered write, and redundancy"
+
+14. "Create CAN configuration for electric vehicle battery management system at 500 kbps with 16 message objects"
+
+15. "Configure fault logging NvM for ASIL-D application with 150 fault codes, immediate write, CRC-32, and triple redundancy"
+
+## Validation and Export Queries
+
+16. "Validate my AUTOSAR configuration against version 4.2.2 standards"
+
+17. "Export complete AUTOSAR configuration for my powertrain ECU project"
+
+18. "Merge CAN and NvM configurations for ECU_Powertrain project"
+
+## Optimization Queries
+
+19. "Optimize CAN message object allocation for minimal latency in engine control application"
+
+20. "Configure NvM with optimal wear-leveling for 10-year EEPROM lifetime with 1 million write cycles"
+
+## Tips for Creating Effective Queries:
+
+- Be specific about ECU type (powertrain, body, chassis, telematics, gateway)
+- Include baudrate for CAN (125, 250, 500, or 1000 kbps)
+- Specify number of message objects or NvM blocks
+- Mention critical features (error handling, wakeup, wear-leveling, CRC, redundancy)
+- For safety-critical applications, mention ASIL level
+- Include write strategy for NvM (immediate, deferred, triggered)
+
+## Common Parameter Ranges:
+
+CAN Baudrates: 125, 250, 500, 1000 kbps
+CAN Message Objects: 1-128 (typically 8-32)
+NvM Blocks: 1-256 (typically 10-100)
+NvM Block Size: 1-65535 bytes (typically 32-512 bytes)
