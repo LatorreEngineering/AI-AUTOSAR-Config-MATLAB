@@ -1,0 +1,35 @@
+# Core web framework
+flask==3.0.0
+flask-cors==4.0.0
+
+# HTTP utilities
+requests==2.31.0
+
+# XML processing for AUTOSAR ARXML generation
+lxml==5.1.0
+xmltodict==0.13.0
+
+# Data validation and parsing
+pydantic==2.5.0
+jsonschema==4.20.0
+
+# Logging and monitoring
+python-json-logger==2.0.7
+
+# Development and testing
+pytest==7.4.3
+pytest-cov==4.1.0
+black==23.12.1
+flake8==6.1.0
+
+# Optional: For real EB tresos integration (uncomment if needed)
+# pywin32==306  # Windows-specific for COM automation
+# subprocess32==3.5.4  # Enhanced subprocess for older Python versions
+
+# Optional: Performance and caching
+redis==5.0.1
+gunicorn==21.2.0
+
+# Documentation
+sphinx==7.2.6
+sphinx-rtd-theme==2.0.0
